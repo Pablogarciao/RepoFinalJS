@@ -2,6 +2,8 @@ import { Token, TokenType } from '../lpp/tokens';
 import { Lexer } from '../lpp/lexer';
 import { describe, test, expect } from '@jest/globals';
 
+// Para ejecutar test: npx jest
+
 describe('LexerTest', () => {
     test('one_character_operator', () => {
         const source: string = '=+-/*<>!';
@@ -23,6 +25,6 @@ describe('LexerTest', () => {
             new Token(TokenType.NEGATION, '!'),
         ];
 
-        expect(tokens).toBe(expectedTokens);
+        expect(tokens).toStrictEqual(expectedTokens);
     });
 });
