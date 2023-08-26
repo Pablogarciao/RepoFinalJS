@@ -30,13 +30,6 @@ async function startRepl(): Promise<void> {
 
         rl.prompt();
     }
-
-    rl.on('close', () => {
-        console.log('Hasta luego!');
-        process.exit(0);
-    });
-
-    rl.prompt();
 }
 
 export { startRepl }

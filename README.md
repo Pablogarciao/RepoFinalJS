@@ -13,8 +13,8 @@ Interprete desarrollado en TypeScript.
 
 *Ejecutar:*
 
-    node src/main.js
+    npm run dev
 
 *Testear:*
 
-    npx jest src/test/lexer_test.test.js
+    npm run test
