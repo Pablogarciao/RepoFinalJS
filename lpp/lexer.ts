@@ -64,7 +64,7 @@ class Lexer {
     
 
     private _isLetter(character: string): boolean {
-        return /^[a-zA-Z]$/.test(character);
+        return /^[a-záéíóúA-ZñÑ_]$/.test(character);
     }
 
     private _isNumber(character: string): boolean {
