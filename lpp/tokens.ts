@@ -26,6 +26,7 @@ enum TokenType {
     SEMICOLON
 }
 
+// Obtener y retornar el nombre del TOKEN 
 function obtenerNombreDeEnum(enumObj: any, valor: number): string | undefined {
     for (const nombre in enumObj) {
         if (enumObj[nombre] === valor) {
@@ -35,6 +36,7 @@ function obtenerNombreDeEnum(enumObj: any, valor: number): string | undefined {
     return undefined;
 }
 
+// Se encarga de representar los TOKEN generados por el lexer
 class Token {
     constructor(
         public token_type: TokenType,
@@ -50,6 +52,7 @@ class Token {
     }
 }
 
+// Se utiliza para determinar el tipo de TOKEN correspondiente a una palabra clave
 function lookupTokenType(literal: string): TokenType {
     const keywords: { [key: string]: TokenType } = {
         'variable': TokenType.LET,
