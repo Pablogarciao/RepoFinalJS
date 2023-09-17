@@ -16,11 +16,7 @@ import {
     Statement,
 } from "./ast";
 
-import {
-    Token,
-    TokenType,
-} from "./tokens";
-
+import { Token, TokenType } from "./tokens";
 import Lexer from "./lexer";
 
 type PrefixParseFn = () => Expression | null;
@@ -28,14 +24,14 @@ type InfixParseFn = (left: Expression) => Expression | null;
 type PrefixParseFns = { [tokenType: string]: PrefixParseFn };
 type InfixParseFns = { [tokenType: string]: InfixParseFn };
 
-class Precedence {
-    static LOWEST = 1;
-    static EQUALS = 2;
-    static LESSGREATER = 3;
-    static SUM = 4;
-    static PRODUCT = 5;
-    static PREFIX = 6;
-    static CALL = 7;
+enum Precedence {
+    LOWEST,
+    EQUALS,
+    LESSGREATER,
+    SUM,
+    PRODUCT,
+    PREFIX,
+    CALL
 }
 
 const PRECEDENCES: Partial<Record<TokenType, Precedence>> = {
@@ -501,31 +497,31 @@ class Parser {
     
     private registerPrefixFns(): PrefixParseFns {
         return {
-            [TokenType.FALSE]: this.parseBoolean,
-            [TokenType.FUNCTION]: this.parseFunction,
-            [TokenType.IDENT]: this.parseIdentifier,
-            [TokenType.IF]: this.parseIf,
-            [TokenType.INT]: this.parseInteger,
-            [TokenType.LPAREN]: this.parseGroupedExpression,
-            [TokenType.MINUS]: this.parsePrefixExpression,
-            [TokenType.NEGATION]: this.parsePrefixExpression,
-            [TokenType.TRUE]: this.parseBoolean,
+            [TokenType.FALSE]: this.parseBoolean.bind(this),
+            [TokenType.FUNCTION]: this.parseFunction.bind(this),
+            [TokenType.IDENT]: this.parseIdentifier.bind(this),
+            [TokenType.IF]: this.parseIf.bind(this),
+            [TokenType.INT]: this.parseInteger.bind(this),
+            [TokenType.LPAREN]: this.parseGroupedExpression.bind(this),
+            [TokenType.MINUS]: this.parsePrefixExpression.bind(this),
+            [TokenType.NEGATION]: this.parsePrefixExpression.bind(this),
+            [TokenType.TRUE]: this.parseBoolean.bind(this),
         };
     }
     
     private registerInfixFns(): InfixParseFns {
         return {
-            [TokenType.PLUS]: this.parseInfixExpression,
-            [TokenType.MINUS]: this.parseInfixExpression,
-            [TokenType.DIVISION]: this.parseInfixExpression,
-            [TokenType.MULTIPLICATION]: this.parseInfixExpression,
-            [TokenType.EQ]: this.parseInfixExpression,
-            [TokenType.DIF]: this.parseInfixExpression,
-            [TokenType.LT]: this.parseInfixExpression,
-            [TokenType.LTE]: this.parseInfixExpression,
-            [TokenType.GT]: this.parseInfixExpression,
-            [TokenType.GTE]: this.parseInfixExpression,
-            [TokenType.LPAREN]: this.parseCall,
+            [TokenType.PLUS]: this.parseInfixExpression.bind(this),
+            [TokenType.MINUS]: this.parseInfixExpression.bind(this),
+            [TokenType.DIVISION]: this.parseInfixExpression.bind(this),
+            [TokenType.MULTIPLICATION]: this.parseInfixExpression.bind(this),
+            [TokenType.EQ]: this.parseInfixExpression.bind(this),
+            [TokenType.DIF]: this.parseInfixExpression.bind(this),
+            [TokenType.LT]: this.parseInfixExpression.bind(this),
+            [TokenType.LTE]: this.parseInfixExpression.bind(this),
+            [TokenType.GT]: this.parseInfixExpression.bind(this),
+            [TokenType.GTE]: this.parseInfixExpression.bind(this),
+            [TokenType.LPAREN]: this.parseCall.bind(this),
         };
     }
 }
