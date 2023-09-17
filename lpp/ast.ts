@@ -76,13 +76,13 @@ export class LetStatement extends Statement {
 }
 
 export class ReturnStatement extends Statement {
-    constructor(public token: Token, public return_value: Expression | null = null) {
+    constructor(public token: Token, public returnValue: Expression | null = null) {
         super(token);
-        this.return_value = return_value;
+        this.returnValue = returnValue;
     }
 
     toString(): string {
-        return `${this.token_literal()} ${this.return_value};`;
+        return `${this.token_literal()} ${this.returnValue};`;
     }
 }
 
@@ -197,13 +197,13 @@ export class CallExpression extends Expression {
     constructor(
         public token: Token,
         public function_name: Expression,
-        public arguments_list: Expression[] = []
+        public args: Expression[] = []
     ) {
         super(token);
     }
 
     toString(): string {
-        const args = this.arguments_list.join(", ");
+        const args = this.args.join(", ");
         return `${this.function_name}(${args})`;
     }
 }

@@ -1,27 +1,27 @@
 import {
-    TokenType,
-    Token,
-} from './tokens';
-
-import {
+    BlockStatement as Block,
+    BooleanLiteral as Boolean,
+    CallExpression as Call,
     Identifier,
-    LetStatement,
-    Statement,
     Expression,
+    ExpressionStatement,
+    FunctionLiteral as Function,
+    IfExpression as If,
+    InfixExpression as Infix,
+    IntegerLiteral as Integer,
+    LetStatement,
+    PrefixExpression as Prefix,
     Program,
     ReturnStatement,
-    CallExpression,
-    ExpressionStatement,
-    FunctionLiteral,
-    IfExpression,
-    InfixExpression,
-    PrefixExpression,
-    IntegerLiteral,
-    BooleanLiteral,
-    BlockStatement,
-} from './ast';
+    Statement,
+} from "./ast";
 
-import Lexer from './lexer';
+import {
+    Token,
+    TokenType,
+} from "./tokens";
+
+import Lexer from "./lexer";
 
 type PrefixParseFn = () => Expression | null;
 type InfixParseFn = (left: Expression) => Expression | null;
@@ -52,6 +52,7 @@ const PRECEDENCES: Partial<Record<TokenType, Precedence>> = {
     [TokenType.LPAREN]: Precedence.CALL,
 };
 
+
 class Parser {
     public lexer: Lexer;
     public currentToken: Token | null = null;
@@ -63,345 +64,455 @@ class Parser {
 
     constructor(lexer: Lexer) {
         this.lexer = lexer;
-
+        
         this.prefixParseFns = this.registerPrefixFns();
         this.infixParseFns = this.registerInfixFns();
 
-        this.nextToken();
-        this.nextToken();
+        this.advanceTokens();
+        this.advanceTokens();
     }
 
-    private nextToken(): void {
+    parseProgram(): Program {
+        const program: Program = new Program([]);
+        
+        if (!this.currentToken) {
+            return program;
+        }
+
+        while (this.currentToken.tokenType !== TokenType.EOF) {
+            const statement = this.parseStatement();
+            if (statement !== null) {
+                program.statements.push(statement);
+            }
+
+            this.advanceTokens();
+        }
+
+        return program;
+    }
+
+    private advanceTokens(): void {
         this.currentToken = this.peekToken;
         this.peekToken = this.lexer.nextToken();
     }
 
-    private peekPrecedence(): Precedence {
-        if (this.peekToken) {
-            const precedence = Precedence[this.peekToken.tokenType];
-            if (precedence !== undefined) {
-                return precedence;
-            }
-        }
-        return Precedence.LOWEST;
-    }
-
     private currentPrecedence(): Precedence {
-        if (this.currentToken) {
-            const precedence = PRECEDENCES[this.currentToken.tokenType];
-            if (precedence !== undefined) {
-                return precedence;
-            }
+        if (!this.currentToken) {
+            return Precedence.LOWEST;
         }
-        return Precedence.LOWEST;
+        try {
+            return PRECEDENCES[this.currentToken.tokenType];
+        } catch (error) {
+            return Precedence.LOWEST;
+        }
     }
 
-    private expectPeek(tokenType: TokenType): boolean {
-        if (this.peekToken && this.peekToken.tokenType === tokenType) {
-            this.nextToken();
+    private expectedToken(tokenType: TokenType): boolean {
+        if (!this.peekToken) {
+            return false;
+        }
+
+        if (this.peekToken.tokenType === tokenType) {
+            this.advanceTokens();
             return true;
         }
-        this.peekError(tokenType);
+
+        this.expectedTokenError(tokenType);
         return false;
     }
 
-    private peekError(tokenType: TokenType): void {
-        const msg = `expected next token to be ${tokenType}, got ${this.peekToken?.tokenType} instead`;
-        this.errors.push(msg);
-    }
-
-    private noPrefixParseFnError(tokenType: TokenType): void {
-        const msg = `no prefix parse function for ${tokenType} found`;
-        this.errors.push(msg);
-    }
-
-    parseProgram(): Program {
-        const program = new Program([]);
-        while (this.currentToken?.tokenType !== TokenType.EOF) {
-            const stmt = this.parseStatement();
-            if (stmt) {
-                program.statements.push(stmt);
-            }
-            this.nextToken();
-        }
-        return program;
-    }
-
-    private parseStatement(): Statement | null {
-        switch (this.currentToken?.tokenType) {
-            case TokenType.LET:
-                return this.parseLetStatement();
-            case TokenType.RETURN:
-                return this.parseReturnStatement();
-            default:
-                return this.parseExpressionStatement();
-        }
-    }
-
-    private parseLetStatement(): LetStatement | null {
-        const stmt = new LetStatement(this.currentToken);
-        if (!this.expectPeek(TokenType.IDENT)) {
-            return null;
-        }
-        stmt.name = new Identifier(this.currentToken, this.currentToken?.literal || "");
-        if (!this.expectPeek(TokenType.ASSIGN)) {
-            return null;
-        }
-        this.nextToken();
-        stmt.value = this.parseExpression(Precedence.LOWEST);
-        if (this.peekTokenIs(TokenType.SEMICOLON)) {
-            this.nextToken();
-        }
-        return stmt;
-    }
-
-    private parseReturnStatement(): ReturnStatement | null {
-        const stmt = new ReturnStatement(this.currentToken);
-        this.nextToken();
-        stmt.return_value = this.parseExpression(Precedence.LOWEST);
-        if (this.peekTokenIs(TokenType.SEMICOLON)) {
-            this.nextToken();
-        }
-        return stmt;
-    }
-
-    private parseExpressionStatement(): ExpressionStatement | null {
-        const stmt = new ExpressionStatement(this.currentToken);
-        stmt.expression = this.parseExpression(Precedence.LOWEST);
-        if (this.peekTokenIs(TokenType.SEMICOLON)) {
-            this.nextToken();
-        }
-        return stmt;
-    }
-
-    private parseExpression(precedence: Precedence): Expression | null {
-        const prefix = this.prefixParseFns[this.currentToken?.tokenType];
-        if (!prefix) {
-            this.noPrefixParseFnError(this.currentToken?.tokenType || TokenType.ILLEGAL);
-            return null;
-        }
-        let leftExp = prefix.call(this);
-        while (!this.peekTokenIs(TokenType.SEMICOLON) && precedence < this.peekPrecedence()) {
-            const infix = this.infixParseFns[this.peekToken?.tokenType];
-            if (!infix) {
-                return leftExp;
-            }
-            this.nextToken();
-            if (!leftExp) {
-                return null;
-            }
-            leftExp = infix.call(this, leftExp);
-        }
-        return leftExp;
-    }
-
-    private parseIdentifier(): Identifier | null {
-        return this.currentToken ? new Identifier(this.currentToken, this.currentToken.literal) : null;
-    }
-
-    private parseIntegerLiteral(): IntegerLiteral | null {
-        const lit = new IntegerLiteral(this.currentToken);
-        if (!this.currentToken) {
-            return null;
-        }
-        const value = parseInt(this.currentToken.literal, 10);
-        if (isNaN(value)) {
-            const msg = `could not parse ${this.currentToken.literal} as integer`;
-            this.errors.push(msg);
-            return null;
-        }
-        lit.value = value;
-        return lit;
-    }
-
-    private parseBoolean(): BooleanLiteral | null {
-        if (!this.currentToken) {
-            return null;
-        }
-        return new BooleanLiteral(this.currentToken, this.currentTokenIs(TokenType.TRUE));
-    }
-
-    private parsePrefixExpression(): PrefixExpression | null {
-        const expression = new PrefixExpression(this.currentToken, this.currentToken?.literal || "");
-        this.nextToken();
-        expression.right = this.parseExpression(Precedence.PREFIX);
-        return expression;
-    }
-
-    private parseInfixExpression(left: Expression): InfixExpression | null {
-        if (this.currentToken == null) return null;
-
-        const infix = new InfixExpression(this.currentToken, left, this.currentToken.literal || "");
-      
-        const precedence = this.currentPrecedence();
-      
-        this.nextToken();
-      
-        infix.right = this.parseExpression(precedence);
-      
-        return infix;
-    }
-
-    private parseGroupedExpression(): Expression | null {
-        this.nextToken();
-        const exp = this.parseExpression(Precedence.LOWEST);
-        if (!this.expectPeek(TokenType.RPAREN)) {
-            return null;
-        }
-        return exp;
-    }
-
-    private parseIfExpression(): IfExpression | null {
-        const expression = new IfExpression(this.currentToken);
-        if (!this.expectPeek(TokenType.LPAREN)) {
-            return null;
-        }
-        this.nextToken();
-        expression.condition = this.parseExpression(Precedence.LOWEST);
-        if (!this.expectPeek(TokenType.RPAREN) || !this.expectPeek(TokenType.LBRACE)) {
-            return null;
-        }
-        expression.consequence = this.parseBlockStatement();
-        if (this.peekTokenIs(TokenType.ELSE)) {
-            this.nextToken();
-            if (!this.expectPeek(TokenType.LBRACE)) {
-                return null;
-            }
-            expression.alternative = this.parseBlockStatement();
-        }
-        return expression;
-    }
-
-    private parseBlockStatement(): BlockStatement {
-        const block = new BlockStatement(this.currentToken, []);
-        this.nextToken();
-        while (!this.currentTokenIs(TokenType.RBRACE) && !this.currentTokenIs(TokenType.EOF)) {
-            const stmt = this.parseStatement();
-            if (stmt) {
-                block.statements.push(stmt);
-            }
-            this.nextToken();
-        }
-        return block;
-    }
-
-    private currentTokenIs(tokenType: TokenType): boolean {
-        return this.currentToken ? this.currentToken.tokenType === tokenType : false;
-    }
-
-    private peekTokenIs(tokenType: TokenType): boolean {
-        return this.peekToken ? this.peekToken.tokenType === tokenType : false;
-    }
-
-    private parseCall(functionExpression: Expression): CallExpression {
-        if (!this.currentToken) {
-          throw new Error('Token actual no definido');
-        }
-      
-        const call = new CallExpression(this.currentToken, functionExpression);
-        call.arguments_list = this.parseCallArguments();
-      
-        return call;
-      }
-      
-      private parseCallArguments(): Expression[] | null {
-        const arguments_list: Expression[] = [];
-      
+    private expectedTokenError(tokenType: TokenType): void {
         if (!this.peekToken) {
-          throw new Error('Token siguiente no definido');
+            return;
         }
-      
-        if (this.peekToken.tokenType === TokenType.RPAREN) {
-          this.nextToken();
-          return arguments_list;
-        }
-      
-        this.nextToken();
-        const expression = this.parseExpression(Precedence.LOWEST);
-        if (expression) {
-          arguments_list.push(expression);
-        }
-      
-        while (this.peekToken && this.peekToken.tokenType === TokenType.COMMA) {
-          this.nextToken();
-          this.nextToken();
-      
-          const expression = this.parseExpression(Precedence.LOWEST);
-          if (expression) {
-            arguments_list.push(expression);
-          }
-        }
-      
-        if (!this.expectPeek(TokenType.RPAREN)) {
-          return null;
-        }
-      
-        return arguments_list;
+        const error = `Se esperaba que el siguiente token fuera ${tokenType}, ` +
+            `pero se obtuvo ${this.peekToken.tokenType}`;
+        this.errors.push(error);
     }
 
-    private parseFunction(): FunctionLiteral | null {
+    private parseBlock(): Block {
         if (!this.currentToken) {
-            throw new Error('Token actual no definido');
+            throw new Error('Current token is null.');
         }
     
-        const functionLiteral = new FunctionLiteral(this.currentToken);
-        
-        if (!this.expectPeek(TokenType.LPAREN)) {
-            return null;
+        const blockStatement = new Block(this.currentToken, []);
+    
+        this.advanceTokens();
+    
+        while (
+            this.currentToken?.tokenType !== TokenType.RBRACE &&
+            this.currentToken?.tokenType !== TokenType.EOF
+        ) {
+            const statement = this.parseStatement();
+    
+            if (statement) {
+                blockStatement.statements.push(statement);
+            }
+    
+            this.advanceTokens();
         }
-        
-        functionLiteral.parameters = this.parseFunctionParameters();
-        
-        if (!this.expectPeek(TokenType.LBRACE)) {
-            return null;
-        }
-        
-        functionLiteral.body = this.parseBlockStatement();
-        
-        return functionLiteral;
+    
+        return blockStatement;
     }
-      
+
+    private parseBoolean(): Boolean {
+        if (!this.currentToken) {
+            throw new Error('Current token is null.');
+        }
+    
+        return new Boolean(this.currentToken, this.currentToken.tokenType === TokenType.TRUE);
+    }
+    
+    private parseCall(functionExpression: Expression): Call {
+        if (!this.currentToken) {
+            throw new Error('Current token is null.');
+        }
+    
+        const call = new Call(this.currentToken, functionExpression);
+        call.args = this.parseCallArguments();
+    
+        return call;
+    }
+
+    private parseCallArguments(): Expression[] | null {
+        const args: Expression[] = [];
+    
+        if (!this.peekToken) {
+            throw new Error('Peek token is null.');
+        }
+    
+        if (this.peekToken.tokenType === TokenType.RPAREN) {
+            this.advanceTokens();
+    
+            return args;
+        }
+    
+        this.advanceTokens();
+    
+        const expression = this.parseExpression(Precedence.LOWEST);
+    
+        if (expression) {
+            args.push(expression);
+        }
+    
+        while (this.peekToken.tokenType === TokenType.COMMA) {
+            this.advanceTokens();
+            this.advanceTokens();
+    
+            const expression = this.parseExpression(Precedence.LOWEST);
+    
+            if (expression) {
+                args.push(expression);
+            }
+        }
+    
+        if (!this.expectedToken(TokenType.RPAREN)) {
+            return null;
+        }
+    
+        return args;
+    }
+    
+    private parseExpression(precedence: Precedence): Expression | null {
+        if (!this.currentToken) {
+            throw new Error('Current token is null.');
+        }
+    
+        const prefixParseFn = this.prefixParseFns[this.currentToken.tokenType];
+    
+        if (!prefixParseFn) {
+            const message = `No se encontró ninguna función para analizar ${this.currentToken.literal}`;
+            this.errors.push(message);
+            return null;
+        }
+    
+        let leftExpression = prefixParseFn();
+    
+        if (!this.peekToken) {
+            throw new Error('Peek token is null.');
+        }
+    
+        while (this.peekToken.tokenType !== TokenType.SEMICOLON && precedence < this.peekPrecedence()) {
+            const infixParseFn = this.infixParseFns[this.peekToken.tokenType];
+    
+            if (!infixParseFn) {
+                return leftExpression;
+            }
+    
+            this.advanceTokens();
+    
+            if (!leftExpression) {
+                throw new Error('Left expression is null.');
+            }
+    
+            leftExpression = infixParseFn(leftExpression);
+        }
+    
+        return leftExpression;
+    }
+    
+    private parseExpressionStatement(): ExpressionStatement | null {
+        if (!this.currentToken) {
+            throw new Error('Current token is null.');
+        }
+    
+        const expressionStatement = new ExpressionStatement(this.currentToken);
+    
+        expressionStatement.expression = this.parseExpression(Precedence.LOWEST);
+    
+        if (!this.peekToken) {
+            throw new Error('Peek token is null.');
+        }
+    
+        if (this.peekToken.tokenType === TokenType.SEMICOLON) {
+            this.advanceTokens();
+        }
+    
+        return expressionStatement;
+    }
+    
+    private parseGroupedExpression(): Expression | null {
+        this.advanceTokens();
+    
+        const expression = this.parseExpression(Precedence.LOWEST);
+    
+        if (!this.expectedToken(TokenType.RPAREN)) {
+            return null;
+        }
+    
+        return expression;
+    }
+    
+    private parseFunction(): Function | null {
+        if (!this.currentToken) {
+            throw new Error('Current token is null.');
+        }
+    
+        const functionToken = this.currentToken;
+        const func = new Function(functionToken);
+    
+        if (!this.expectedToken(TokenType.LPAREN)) {
+            return null;
+        }
+    
+        func.parameters = this.parseFunctionParameters();
+    
+        if (!this.expectedToken(TokenType.LBRACE)) {
+            return null;
+        }
+    
+        func.body = this.parseBlock();
+    
+        return func;
+    }
+    
     private parseFunctionParameters(): Identifier[] {
         const parameters: Identifier[] = [];
-        
-        if (!this.peekToken) {
-            throw new Error('Token siguiente no definido');
-        }
-        
-        if (this.peekToken.tokenType === TokenType.RPAREN) {
-            this.nextToken();
+    
+        if (this.peekToken && this.peekToken.tokenType === TokenType.RPAREN) {
+            this.advanceTokens();
             return parameters;
         }
-        
-        this.nextToken();
-        
-        if (!this.currentToken) {
-            throw new Error('Token actual no definido');
-        }
-        
-        const identifier = new Identifier(this.currentToken, this.currentToken.literal);
-        parameters.push(identifier);
-        
-        while (this.peekToken && this.peekToken.tokenType === TokenType.COMMA) {
-            this.nextToken();
-            this.nextToken();
-        
-            if (!this.currentToken) {
-            throw new Error('Token actual no definido');
-            }
-        
+    
+        this.advanceTokens();
+    
+        if (this.currentToken) {
             const identifier = new Identifier(this.currentToken, this.currentToken.literal);
             parameters.push(identifier);
         }
-        
-        if (!this.expectPeek(TokenType.RPAREN)) {
+    
+        while (this.peekToken && this.peekToken.tokenType === TokenType.COMMA) {
+            this.advanceTokens();
+            this.advanceTokens();
+    
+            if (this.currentToken) {
+                const identifier = new Identifier(this.currentToken, this.currentToken.literal);
+                parameters.push(identifier);
+            }
+        }
+    
+        if (!this.expectedToken(TokenType.RPAREN)) {
             return [];
         }
-        
+    
         return parameters;
     }
-      
-
+    
+    private parseIdentifier(): Identifier | null {
+        return this.currentToken ? new Identifier(this.currentToken, this.currentToken.literal) : null;
+    }    
+    
+    private parseIf(): If | null {
+        if (!this.currentToken) {
+            return null;
+        }
+    
+        const ifExpression = new If(this.currentToken);
+    
+        if (!this.expectedToken(TokenType.LPAREN)) {
+            return null;
+        }
+    
+        this.advanceTokens();
+    
+        ifExpression.condition = this.parseExpression(Precedence.LOWEST);
+    
+        if (!this.expectedToken(TokenType.RPAREN)) {
+            return null;
+        }
+    
+        if (!this.expectedToken(TokenType.LBRACE)) {
+            return null;
+        }
+    
+        ifExpression.consequence = this.parseBlock();
+    
+        if (this.peekToken && this.peekToken.tokenType === TokenType.ELSE) {
+            this.advanceTokens();
+    
+            if (!this.expectedToken(TokenType.LBRACE)) {
+                return null;
+            }
+    
+            ifExpression.alternative = this.parseBlock();
+        }
+    
+        return ifExpression;
+    }
+    
+    private parseInfixExpression(left: Expression): Infix {
+        if (!this.currentToken) {
+            throw new Error('currentToken is null');
+        }
+    
+        const infix = new Infix(this.currentToken, left, this.currentToken.literal);
+    
+        const precedence = this.currentPrecedence();
+    
+        this.advanceTokens();
+    
+        infix.right = this.parseExpression(precedence);
+    
+        return infix;
+    }
+    
+    private parseInteger(): Integer | null {
+        if (!this.currentToken) {
+            return null;
+        }
+    
+        const integer = new Integer(this.currentToken);
+    
+        try {
+            integer.value = parseInt(this.currentToken.literal, 10);
+        } catch (error) {
+            const message = `No se ha podido parsear ${this.currentToken.literal} como entero.`;
+            this.errors.push(message);
+            return null;
+        }
+    
+        this.advanceTokens();
+    
+        return integer;
+    }
+    
+    private parseLetStatement(): LetStatement | null {
+        if (!this.currentToken) {
+            return null;
+        }
+    
+        const letStatement = new LetStatement(this.currentToken);
+    
+        if (!this.expectedToken(TokenType.IDENT)) {
+            return null;
+        }
+    
+        letStatement.name = this.parseIdentifier();
+    
+        if (!this.expectedToken(TokenType.ASSIGN)) {
+            return null;
+        }
+    
+        this.advanceTokens();
+    
+        letStatement.value = this.parseExpression(Precedence.LOWEST);
+    
+        if (this.peekToken && this.peekToken.tokenType === TokenType.SEMICOLON) {
+            this.advanceTokens();
+        }
+    
+        return letStatement;
+    }
+    
+    private parsePrefixExpression(): Prefix | null {
+        if (!this.currentToken) {
+            return null;
+        }
+    
+        const prefixExpression = new Prefix(this.currentToken, this.currentToken.literal);
+    
+        this.advanceTokens();
+    
+        prefixExpression.right = this.parseExpression(Precedence.PREFIX);
+    
+        return prefixExpression;
+    }
+    
+    private parseReturnStatement(): ReturnStatement | null {
+        if (!this.currentToken) {
+            return null;
+        }
+    
+        const returnStatement = new ReturnStatement(this.currentToken);
+    
+        this.advanceTokens();
+    
+        returnStatement.returnValue = this.parseExpression(Precedence.LOWEST);
+    
+        if (this.peekToken && this.peekToken.tokenType === TokenType.SEMICOLON) {
+            this.advanceTokens();
+        }
+    
+        return returnStatement;
+    }
+    
+    private parseStatement(): Statement | null {
+        if (!this.currentToken) {
+            return null;
+        }
+    
+        if (this.currentToken.tokenType === TokenType.LET) {
+            return this.parseLetStatement();
+        } else if (this.currentToken.tokenType === TokenType.RETURN) {
+            return this.parseReturnStatement();
+        } else {
+            return this.parseExpressionStatement();
+        }
+    }
+    
+    private peekPrecedence(): Precedence {
+        if (!this.peekToken) {
+            return Precedence.LOWEST;
+        }
+    
+        const precedence = PRECEDENCES[this.peekToken.tokenType];
+        return precedence !== undefined ? precedence : Precedence.LOWEST;
+    }
+    
+    private registerPrefixFns(): PrefixParseFns {
+        return {
+            [TokenType.FALSE]: this.parseBoolean,
+            [TokenType.FUNCTION]: this.parseFunction,
+            [TokenType.IDENT]: this.parseIdentifier,
+            [TokenType.IF]: this.parseIf,
+            [TokenType.INT]: this.parseInteger,
+            [TokenType.LPAREN]: this.parseGroupedExpression,
+            [TokenType.MINUS]: this.parsePrefixExpression,
+            [TokenType.NEGATION]: this.parsePrefixExpression,
+            [TokenType.TRUE]: this.parseBoolean,
+        };
+    }
+    
     private registerInfixFns(): InfixParseFns {
         return {
             [TokenType.PLUS]: this.parseInfixExpression,
@@ -417,21 +528,6 @@ class Parser {
             [TokenType.LPAREN]: this.parseCall,
         };
     }
-    
-    private registerPrefixFns(): PrefixParseFns {
-        return {
-            [TokenType.FALSE]: this.parseBoolean,
-            [TokenType.FUNCTION]: this.parseFunction,
-            [TokenType.IDENT]: this.parseIdentifier,
-            [TokenType.IF]: this.parseIfExpression,
-            [TokenType.INT]: this.parseIntegerLiteral,
-            [TokenType.LPAREN]: this.parseGroupedExpression,
-            [TokenType.MINUS]: this.parsePrefixExpression,
-            [TokenType.NEGATION]: this.parsePrefixExpression,
-            [TokenType.TRUE]: this.parseBoolean,
-        };
-    }
-    
 }
 
 export default Parser;
