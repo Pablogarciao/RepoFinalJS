@@ -407,8 +407,6 @@ class Parser {
             return null;
         }
     
-        this.advanceTokens();
-    
         return integer;
     }
     
@@ -490,7 +488,6 @@ class Parser {
         if (!this.peekToken) {
             return Precedence.LOWEST;
         }
-    
         const precedence = PRECEDENCES[this.peekToken.tokenType];
         return precedence !== undefined ? precedence : Precedence.LOWEST;
     }
