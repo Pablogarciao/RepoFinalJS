@@ -19,7 +19,6 @@ class Lexer {
             case "=":
                 if (this.peekCharacter() === '=') {
                     const tokenP = this.makeTwoCharacterToken(TokenType.EQ);
-                    this.readCharacter();
                     token = tokenP;
                 } else {
                     token = new Token(TokenType.ASSIGN, this.character);
@@ -58,7 +57,6 @@ class Lexer {
             case '<':
                 if (this.peekCharacter() === '=') {
                     const tokenP = this.makeTwoCharacterToken(TokenType.LTE);
-                    this.readCharacter();
                     token = tokenP;
                 } else {
                     token = new Token(TokenType.LT, this.character);
@@ -67,7 +65,6 @@ class Lexer {
             case '>':
                 if (this.peekCharacter() === '=') {
                     const tokenP = this.makeTwoCharacterToken(TokenType.GTE);
-                    this.readCharacter();
                     token = tokenP;
                 } else {
                     token = new Token(TokenType.GT, this.character);
