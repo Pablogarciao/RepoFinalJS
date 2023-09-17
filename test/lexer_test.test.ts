@@ -1,7 +1,7 @@
 import { Token, TokenType } from '../lpp/tokens';
-import { Lexer } from '../lpp/lexer';
+import Lexer from '../lpp/lexer';
 
-describe('LexerTest', () => {
+describe('Lexer', () => {
     test('one_character_operator', () => {
         const source: string = '=+-/*<>!';
         const lexer: Lexer = new Lexer(source);
@@ -12,7 +12,7 @@ describe('LexerTest', () => {
         }
 
         const expectedTokens: Token[] = [
-            new Token(TokenType.ASSING, '='),
+            new Token(TokenType.ASSIGN, '='),
             new Token(TokenType.PLUS, '+'),
             new Token(TokenType.MINUS, '-'),
             new Token(TokenType.DIVISION, '/'),

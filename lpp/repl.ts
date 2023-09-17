@@ -1,9 +1,14 @@
-import { Lexer } from './lexer';
-import { Token, TokenType } from './tokens';
+import { Program } from './ast';
+import { evaluate } from './evaluator';
+import Lexer from './lexer';
+import Parser from './parser';
 import * as readline from "readline"
 
-// Creación de un token EOF (fin de archivo) para marcar el final de la entrada
-const EOF_TOKEN: Token = new Token(TokenType.EOF, '');
+function printParseErrors(errors: string[]): void {
+    for (const error of errors) {
+        console.log(error);
+    }
+}
 
 // Definición de una función asincrónica para iniciar el interprete
 async function startRepl(): Promise<void> {
@@ -24,17 +29,23 @@ async function startRepl(): Promise<void> {
         }
 
         const lexer: Lexer = new Lexer(source);
+        const parser: Parser = new Parser(lexer);
 
-        let token: Token = lexer.nextToken();
+        const program: Program = parser.parseProgram();
 
-        // Bucle para imprimir los TOKEN generados por el lexer
-        while (!token.equals(EOF_TOKEN)) {
-            console.log(token.toString());
-            token = lexer.nextToken();
+        if (parser.errors.length > 0) {
+            printParseErrors(parser.errors);
+            return;
+        }
+
+        const evaluated = evaluate(program);
+        
+        if (evaluated !== null) {
+            console.log(evaluated.inspect());
         }
 
         rl.prompt();
     }
 }
 
-export { startRepl }
+export default startRepl;
