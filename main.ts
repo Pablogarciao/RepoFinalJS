@@ -1,4 +1,4 @@
-import { startRepl } from "./lpp/repl";
+import startRepl from "./lpp/repl";
 
 function imprimirBienvenida(): void {
     const bienvenida: string[] = [

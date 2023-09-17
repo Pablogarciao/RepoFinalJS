@@ -1,14 +1,17 @@
 enum TokenType {
-    ASSING,
+    ASSIGN,
     COMMA,
+    DIF,
     DIVISION,
-    EQ,
+    ELSE,
     EOF,
-    FOR,
+    EQ,
+    FALSE,
     FUNCTION,
     GT,
     GTE,
     IDENT,
+    IF,
     ILLEGAL,
     INT,
     LBRACE,
@@ -16,14 +19,16 @@ enum TokenType {
     LPAREN,
     LT,
     LTE,
-    NEGATION,
     MINUS,
     MULTIPLICATION,
-    NEQ,
+    NEGATION,
+    NOT_EQ,
     PLUS,
     RBRACE,
+    RETURN,
     RPAREN,
-    SEMICOLON
+    SEMICOLON,
+    TRUE
 }
 
 // Obtener y retornar el nombre del TOKEN 
@@ -39,25 +44,29 @@ function obtenerNombreDeEnum(enumObj: any, valor: number): string | undefined {
 // Se encarga de representar los TOKEN generados por el lexer
 class Token {
     constructor(
-        public token_type: TokenType,
+        public tokenType: TokenType,
         public literal: string
     ) {}
 
     toString(): string {
-        return `Type TokenType.${obtenerNombreDeEnum(TokenType, this.token_type)}, Literal ${this.literal}`;
+        return `Type TokenType.${obtenerNombreDeEnum(TokenType, this.tokenType)}, Literal ${this.literal}`;
     }
 
     equals(t: Token): boolean {
-        return (this.token_type==t.token_type) && (this.literal==t.literal);
+        return (this.tokenType==t.tokenType) && (this.literal==t.literal);
     }
 }
 
 // Se utiliza para determinar el tipo de TOKEN correspondiente a una palabra clave
 function lookupTokenType(literal: string): TokenType {
     const keywords: { [key: string]: TokenType } = {
+        'falso': TokenType.FALSE,
+        'procedimiento': TokenType.FUNCTION,
+        'regresa': TokenType.RETURN,
+        'si': TokenType.IF,
+        'si_no': TokenType.ELSE,
         'variable': TokenType.LET,
-        'funcion': TokenType.FUNCTION,
-        'para': TokenType.FOR
+        'verdadero': TokenType.TRUE,
     };
     return keywords[literal] || TokenType.IDENT;
 }
