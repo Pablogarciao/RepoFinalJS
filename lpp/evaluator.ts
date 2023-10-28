@@ -200,12 +200,15 @@ function evaluateIdentifier(node: Identifier, env: Environment): Object {
 function evaluateIfExpression(ifExpression: IfExpression, env: Environment): Object | null {
     if (ifExpression.condition) {
         const condition = evaluate(ifExpression.condition, env);
+
         if (condition) {
-            if (ifExpression.consequence) {
-                return evaluate(ifExpression.consequence, env);
+            
+            if (isTruthy(condition)) {
+                if (ifExpression.consequence) return evaluate(ifExpression.consequence, env);
+            } else if (ifExpression.alternative) {
+                return evaluate(ifExpression.alternative, env);
             }
-        } else if (ifExpression.alternative) {
-            return evaluate(ifExpression.alternative, env);
+
         }
     }
     return NULL;

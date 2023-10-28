@@ -17,9 +17,8 @@ import {
     StringLiteral
 } from "./ast";
 
-import { Token, TokenType } from "./tokens";
+import { Token, TokenType, obtenerNombreEnum } from "./tokens";
 import Lexer from "./lexer";
-import { String } from './object';
 
 type PrefixParseFn = () => Expression | null;
 type InfixParseFn = (left: Expression) => Expression | null;
@@ -123,8 +122,8 @@ class Parser {
         if (!this.peekToken) {
             return;
         }
-        const error = `Se esperaba que el siguiente token fuera ${tokenType}, ` +
-            `pero se obtuvo ${this.peekToken.tokenType}`;
+        const error = `Se esperaba que el siguiente token fuera ${obtenerNombreEnum(tokenType)}, ` +
+            `pero se obtuvo ${obtenerNombreEnum(this.peekToken.tokenType)}`;
         this.errors.push(error);
     }
 

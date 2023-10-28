@@ -32,7 +32,10 @@ enum TokenType {
 }
 
 // Obtener y retornar el nombre del TOKEN 
-function obtenerNombreDeEnum(enumObj: any, valor: number): string | undefined {
+export function obtenerNombreEnum(valor: number): string | undefined {
+    return _obtenerNombreDeEnum(TokenType, valor);
+}
+function _obtenerNombreDeEnum(enumObj: any, valor: number): string | undefined {
     for (const nombre in enumObj) {
         if (enumObj[nombre] === valor) {
             return nombre;
@@ -49,7 +52,7 @@ class Token {
     ) {}
 
     toString(): string {
-        return `Type TokenType.${obtenerNombreDeEnum(TokenType, this.tokenType)}, Literal ${this.literal}`;
+        return `Type TokenType.${obtenerNombreEnum(this.tokenType)}, Literal ${this.literal}`;
     }
 
     equals(t: Token): boolean {

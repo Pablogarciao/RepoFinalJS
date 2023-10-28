@@ -36,6 +36,9 @@ class Lexer {
             case ")":
                 token = new Token(TokenType.RPAREN, this.character);
                 break;
+            case '{':
+                token = new Token(TokenType.LBRACE, this.character);
+                break;
             case '}':
                 token = new Token(TokenType.RBRACE, this.character);
                 break;

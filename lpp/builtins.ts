@@ -10,7 +10,7 @@ export function longitud(...args: Objeto[]): Objeto {
     const argument = args[0] as String;
     return new Integer(argument.value.length);
   } else {
-    return new Error(_UNSUPPORTED_ARGUMENT_TYPE.replace('{}', obtenerNombreDeEnum(args[0].type())));
+    return new Error(_UNSUPPORTED_ARGUMENT_TYPE.replace('{}', args[0].type().toString()));
   }
 }
 
