@@ -39,8 +39,7 @@ async function startRepl(): Promise<void> {
 
         if (parser.errors.length > 0) {
             printParseErrors(parser.errors);
-            rl.prompt();
-            continue;
+            break;
         }
 
         const evaluated = evaluate(program, env);
