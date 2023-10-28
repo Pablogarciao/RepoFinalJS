@@ -1,6 +1,7 @@
 import { Program } from './ast';
 import { evaluate } from './evaluator';
 import Lexer from './lexer';
+import { Environment } from './object';
 import Parser from './parser';
 import * as readline from "readline"
 
@@ -16,10 +17,8 @@ async function startRepl(): Promise<void> {
         input: process.stdin,
         output: process.stdout,
     });
-
-    rl.setPrompt('>> ');
     
-     // Bucle para leer las lineas de entrada del usuario
+    // Bucle para leer las lineas de entrada del usuario
     for await (const source of rl) {
         rl.setPrompt('>> ');
 
@@ -32,15 +31,17 @@ async function startRepl(): Promise<void> {
         const parser: Parser = new Parser(lexer);
 
         const program: Program = parser.parseProgram();
+        const env : Environment = new Environment()
 
         if (parser.errors.length > 0) {
             printParseErrors(parser.errors);
             return;
         }
 
-        const evaluated = evaluate(program);
+        const evaluated = evaluate(program, env);
         
         if (evaluated !== null) {
+            console.log(evaluate)
             console.log(evaluated.inspect());
         }
 

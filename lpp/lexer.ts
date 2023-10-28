@@ -79,6 +79,10 @@ class Lexer {
                     token = new Token(TokenType.NEGATION, this.character);
                 }
                 break;
+            case '"':
+                const literal = this.readString();
+                token = new Token(TokenType.STRING, literal);
+                break;
             default:
                 if (this.isLetter(this.character)) {
                     const literal = this.readIdentifier();
@@ -156,6 +160,20 @@ class Lexer {
         while (/^\s$/.test(this.character)) {
             this.readCharacter();
         }
+    }
+
+    private readString(): string {
+        this.readCharacter();
+    
+        const initialPosition = this.position;
+    
+        while (this.character !== '"' && this.readPosition <= this.source.length) {
+            this.readCharacter();
+        }
+    
+        const string = this.source.substring(initialPosition, this.position);
+    
+        return string;
     }
 }
 

@@ -1,5 +1,6 @@
 import { Token } from "./tokens";
 
+
 export class ASTNode {
     token_literal(): string {
         throw new Error("Method not implemented.");
@@ -214,6 +215,6 @@ export class StringLiteral extends Expression {
     }
 
     toString(): string {
-        return this.value ? `"${this.value}"` : "";
+        return super.toString();
     }
 }

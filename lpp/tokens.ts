@@ -1,7 +1,6 @@
 enum TokenType {
     ASSIGN,
     COMMA,
-    DIF,
     DIVISION,
     ELSE,
     EOF,
@@ -28,7 +27,8 @@ enum TokenType {
     RETURN,
     RPAREN,
     SEMICOLON,
-    TRUE
+    STRING,
+    TRUE,
 }
 
 // Obtener y retornar el nombre del TOKEN 
