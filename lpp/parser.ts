@@ -285,9 +285,14 @@ class Parser {
             throw new Error('Current token is null.');
         }
     
-        const functionToken = this.currentToken;
-        const func = new Function(functionToken);
+        const func = new Function(this.currentToken);
     
+        if (!this.expectedToken(TokenType.IDENT)) {
+            return null;
+        }
+    
+        func.name = this.parseIdentifier();
+
         if (!this.expectedToken(TokenType.LPAREN)) {
             return null;
         }

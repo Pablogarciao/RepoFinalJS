@@ -129,12 +129,14 @@ export class Function extends Objeto {
     public parameters: Identifier[];
     public body: BlockStatement;
     public env: Environment;
+    public name: Identifier;
 
-    constructor(parameters: Identifier[], body: BlockStatement, env: Environment) {
+    constructor(parameters: Identifier[], body: BlockStatement, env: Environment, name: Identifier) {
         super();
         this.parameters = parameters;
         this.body = body;
         this.env = env;
+        this.name = name;
     }
 
     type(): ObjectType {
@@ -143,7 +145,7 @@ export class Function extends Objeto {
 
     inspect(): string {
         const params: string = this.parameters.map((param) => param.toString()).join(', ');
-        return `procedimiento(${params}) {\n${this.body.toString()}\n}`;
+        return `procedimiento ${this.name}(${params}) {\n${this.body.toString()}\n}`;
     }
 }
 

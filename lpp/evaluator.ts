@@ -127,8 +127,9 @@ export function evaluate(node: ASTNode | null, env: Environment | null): Object 
 
         case FunctionLiteral:
             const functionNode = node as FunctionLiteral;
-            if (functionNode?.body) {
-                return new Function(functionNode.parameters, functionNode.body, env);
+            if (functionNode?.body && functionNode?.name) {
+                env[functionNode.name.value] = functionNode;
+                return new Function(functionNode.parameters, functionNode.body, env, functionNode.name);
             }
             break;
 
@@ -320,7 +321,8 @@ function toBooleanObject(value: boolean): Boolean {
 }
 
 function applyFunction(fn: Object, args: Object[]): any {
-    if (fn.type() === ObjectType.FUNCTION) {
+    // AQUIIIII
+    if (fn?.type() === ObjectType.FUNCTION) {
         const fnObject = fn as Function;
         const extendedEnvironment = extendFunctionEnvironment(fnObject, args);
         const evaluated = evaluate(fnObject.body, extendedEnvironment);

@@ -1,3 +1,4 @@
+import { ObjectType } from "typescript";
 import { Token } from "./tokens";
 
 
@@ -183,7 +184,8 @@ export class FunctionLiteral extends Expression {
     constructor(
         public token: Token,
         public parameters: Identifier[] = [],
-        public body: BlockStatement | null = null
+        public body: BlockStatement | null = null,
+        public name: Identifier = null
     ) {
         super(token);
     }
