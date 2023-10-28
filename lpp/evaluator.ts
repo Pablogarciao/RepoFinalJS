@@ -50,24 +50,28 @@ export function evaluate(node: ASTNode | null, env: Environment | null): Object 
     switch (node.constructor) {
         case Program:
             return evaluateProgram(node as Program, env);
+
         case ExpressionStatement:
             const expressionStatement = node as ExpressionStatement;
             if (expressionStatement.expression) {
                 return evaluate(expressionStatement.expression, env);
             }
             break;
+
         case IntegerLiteral:
             const integer = node as IntegerLiteral;
             if (integer.value !== undefined) {
                 return new IntegerObject(integer.value);
             }
             break;
+
         case BooleanLiteral:
             const boolean = node as BooleanLiteral;
             if (boolean.value !== undefined) {
                 return toBooleanObject(boolean.value);
             }
             break;
+
         case Prefix:
             const prefix = node as Prefix;
             if (prefix.right) {
@@ -77,6 +81,7 @@ export function evaluate(node: ASTNode | null, env: Environment | null): Object 
                 }
             }
             break;
+
         case Infix:
             const infix = node as Infix;
             if (infix.left && infix.right) {
@@ -87,12 +92,15 @@ export function evaluate(node: ASTNode | null, env: Environment | null): Object 
                 }
             }
             break;
+
         case BlockStatement:
             const block = node as BlockStatement;
             return evaluateBlockStatement(block, env);
+
         case IfExpression:
             const ifExpression = node as IfExpression;
             return evaluateIfExpression(ifExpression, env);
+
         case ReturnStatement:
             const returnStatement = node as ReturnStatement;
             if (returnStatement.returnValue) {
@@ -102,6 +110,7 @@ export function evaluate(node: ASTNode | null, env: Environment | null): Object 
                 }
             }
             break;
+        
         case LetStatement:
             const letStatement = node as LetStatement;
             if (letStatement.value) {
@@ -111,15 +120,18 @@ export function evaluate(node: ASTNode | null, env: Environment | null): Object 
                 }
             }
             break;
+
         case Identifier:
             const identifier = node as Identifier;
             return evaluateIdentifier(identifier, env);
+
         case FunctionLiteral:
             const functionNode = node as FunctionLiteral;
             if (functionNode?.body) {
                 return new Function(functionNode.parameters, functionNode.body, env);
             }
             break;
+
         case CallExpression:
             const callNode = node as CallExpression;
             const func = evaluate(callNode.function_name, env);
@@ -132,10 +144,11 @@ export function evaluate(node: ASTNode | null, env: Environment | null): Object 
                 }
             }
             break;
+
         case StringLiteral:
             const stringNode = node as StringLiteral;
-
             return new String(stringNode.value);
+
         default:
             return null;
     }
