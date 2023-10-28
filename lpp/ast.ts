@@ -1,5 +1,5 @@
-import { ObjectType } from "typescript";
 import { Token } from "./tokens";
+import { ObjectType } from './object';
 
 
 export class ASTNode {
@@ -188,6 +188,10 @@ export class FunctionLiteral extends Expression {
         public name: Identifier = null
     ) {
         super(token);
+    }
+
+    type(): ObjectType {
+        return ObjectType.FUNCTION;
     }
 
     toString(): string {
