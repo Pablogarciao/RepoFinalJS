@@ -1,5 +1,5 @@
-import { Program, LetStatement, ReturnStatement, Identifier } from '../lpp/ast';
-import { Token, TokenType } from '../lpp/tokens';
+import { Program, LetStatement, ReturnStatement, Identifier } from '../lpp/ast.mjs';
+import { Token, TokenType } from '../lpp/tokens.mjs';
 
 describe('AST', () => {
   test('should create a LetStatement', () => {

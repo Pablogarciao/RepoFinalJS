@@ -1,6 +1,6 @@
-import { Program, LetStatement, ReturnStatement } from '../lpp/ast';
-import Lexer from '../lpp/lexer';
-import Parser from '../lpp/parser';
+import { Program, LetStatement, ReturnStatement } from '../lpp/ast.mjs';
+import Lexer from '../lpp/lexer.mjs';
+import Parser from '../lpp/parser.mjs';
 
 describe('Parser', () => {
   test('should parse a program', () => {

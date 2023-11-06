@@ -1,25 +1,23 @@
-import { Program } from './ast';
-import { evaluate } from './evaluator';
-import Lexer from './lexer';
-import { Environment } from './object';
-import Parser from './parser';
+import { Program } from './ast.mjs';
+import { evaluate } from './evaluator.mjs';
+import Lexer from './lexer.mjs';
+import { Environment } from './object.mjs';
+import Parser from './parser.mjs';
 import * as readline from "readline"
 
-function printParseErrors(errors: string[]): void {
+function printParseErrors(errors){
     for (const error of errors) {
         console.log(error);
     }
 }
 
 // Definición de una función asincrónica para iniciar el interprete
-async function startRepl(): Promise<void> {
+async function startRepl() {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
     });
 
-    // Se hace esto para que sea multilinea y guarden todos los datos no solo de una línea
-    const scanned: string[] = [];
     
     // Bucle para leer las lineas de entrada del usuario
     for await (const source of rl) {
@@ -30,12 +28,11 @@ async function startRepl(): Promise<void> {
             return;
         }
 
-        scanned.push(source);
-        const lexer: Lexer = new Lexer(scanned.join(' '));
-        const parser: Parser = new Parser(lexer);
+        const lexer = new Lexer(source);
+        const parser = new Parser(lexer);
 
-        const program: Program = parser.parseProgram();
-        const env : Environment = new Environment()
+        const program= parser.parseProgram();
+        const env= new Environment()
 
         if (parser.errors.length > 0) {
             printParseErrors(parser.errors);
@@ -43,7 +40,8 @@ async function startRepl(): Promise<void> {
         }
 
         const evaluated = evaluate(program, env);
-        
+        //acá esta el problema pq está llegando el evaluated como undefined (llega del evaluate program)
+        //entonces no está entrando al if de la impresion
         if (evaluated !== null && evaluated !== undefined) {
             console.log(evaluated?.inspect());
         }

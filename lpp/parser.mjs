@@ -15,27 +15,33 @@ import {
     ReturnStatement,
     Statement,
     StringLiteral
-} from "./ast";
+} from "./ast.mjs";
 
-import { Token, TokenType, obtenerNombreEnum } from "./tokens";
-import Lexer from "./lexer";
+import { Token, TokenType, obtenerNombreEnum } from "./tokens.mjs";
+import Lexer from "./lexer.mjs";
 
-type PrefixParseFn = () => Expression | null;
-type InfixParseFn = (left: Expression) => Expression | null;
+const PrefixParseFn = () => Expression | null;
+const InfixParseFn = (left) => Expression | null;
+
+const PrefixParseFns = {};
+const InfixParseFns = {};
+
+/* ORIGINAL
 type PrefixParseFns = { [tokenType: string]: PrefixParseFn };
 type InfixParseFns = { [tokenType: string]: InfixParseFn };
+*/
 
-enum Precedence {
-    LOWEST,
-    EQUALS,
-    LESSGREATER,
-    SUM,
-    PRODUCT,
-    PREFIX,
-    CALL
-}
+const Precedence = {
+    LOWEST: 0,
+    EQUALS: 1,
+    LESSGREATER: 2,
+    SUM: 3,
+    PRODUCT: 4,
+    PREFIX: 5,
+    CALL: 6
+};
 
-const PRECEDENCES: Partial<Record<TokenType, Precedence>> = {
+const PRECEDENCES = {
     [TokenType.EQ]: Precedence.EQUALS,
     [TokenType.DIVISION]: Precedence.PRODUCT,
     [TokenType.GT]: Precedence.LESSGREATER,
@@ -51,16 +57,13 @@ const PRECEDENCES: Partial<Record<TokenType, Precedence>> = {
 
 
 class Parser {
-    public lexer: Lexer;
-    public currentToken: Token | null = null;
-    public peekToken: Token | null = null;
-    public errors: string[] = [];
-
-    public prefixParseFns: PrefixParseFns = {};
-    public infixParseFns: InfixParseFns = {};
-
-    constructor(lexer: Lexer) {
+    constructor(lexer) {
         this.lexer = lexer;
+        this.currentToken = null;
+        this.peekToken = null;
+        this.errors = [];
+        this.prefixParseFns = {};
+        this.infixParseFns = {};
         
         this.prefixParseFns = this.registerPrefixFns();
         this.infixParseFns = this.registerInfixFns();
@@ -69,8 +72,8 @@ class Parser {
         this.advanceTokens();
     }
 
-    parseProgram(): Program {
-        const program: Program = new Program([]);
+    parseProgram() {
+        const program = new Program([]);
         
         if (!this.currentToken) {
             return program;
@@ -88,12 +91,12 @@ class Parser {
         return program;
     }
 
-    private advanceTokens(): void {
+    advanceTokens () {
         this.currentToken = this.peekToken;
         this.peekToken = this.lexer.nextToken();
-    }
-
-    private currentPrecedence(): Precedence {
+    };
+    
+    currentPrecedence () {
         if (!this.currentToken) {
             return Precedence.LOWEST;
         }
@@ -102,9 +105,9 @@ class Parser {
         } catch (error) {
             return Precedence.LOWEST;
         }
-    }
+    };
 
-    private expectedToken(tokenType: TokenType): boolean {
+    expectedToken(tokenType){
         if (!this.peekToken) {
             return false;
         }
@@ -118,7 +121,7 @@ class Parser {
         return false;
     }
 
-    private expectedTokenError(tokenType: TokenType): void {
+    expectedTokenError(tokenType) {
         if (!this.peekToken) {
             return;
         }
@@ -127,7 +130,7 @@ class Parser {
         this.errors.push(error);
     }
 
-    private parseBlock(): Block {
+    parseBlock(){
         if (!this.currentToken) {
             throw new Error('Current token is null.');
         }
@@ -152,7 +155,7 @@ class Parser {
         return blockStatement;
     }
 
-    private parseBoolean(): Boolean {
+    parseBoolean(){
         if (!this.currentToken) {
             throw new Error('Current token is null.');
         }
@@ -160,7 +163,7 @@ class Parser {
         return new Boolean(this.currentToken, this.currentToken.tokenType === TokenType.TRUE);
     }
     
-    private parseCall(functionExpression: Expression): Call {
+    parseCall(functionExpression){
         if (!this.currentToken) {
             throw new Error('Current token is null.');
         }
@@ -171,8 +174,8 @@ class Parser {
         return call;
     }
 
-    private parseCallArguments(): Expression[] | null {
-        const args: Expression[] = [];
+    parseCallArguments() {
+        const args= [];
     
         if (!this.peekToken) {
             throw new Error('Peek token is null.');
@@ -210,7 +213,7 @@ class Parser {
         return args;
     }
     
-    private parseExpression(precedence: Precedence): Expression | null {
+    parseExpression(precedence){
         if (!this.currentToken) {
             throw new Error('Current token is null.');
         }
@@ -248,7 +251,7 @@ class Parser {
         return leftExpression;
     }
     
-    private parseExpressionStatement(): ExpressionStatement | null {
+    parseExpressionStatement() {
         if (!this.currentToken) {
             throw new Error('Current token is null.');
         }
@@ -268,7 +271,7 @@ class Parser {
         return expressionStatement;
     }
     
-    private parseGroupedExpression(): Expression | null {
+    parseGroupedExpression() {
         this.advanceTokens();
     
         const expression = this.parseExpression(Precedence.LOWEST);
@@ -280,7 +283,7 @@ class Parser {
         return expression;
     }
     
-    private parseFunction(): Function | null {
+    parseFunction() {
         if (!this.currentToken) {
             throw new Error('Current token is null.');
         }
@@ -308,8 +311,8 @@ class Parser {
         return func;
     }
     
-    private parseFunctionParameters(): Identifier[] {
-        const parameters: Identifier[] = [];
+   parseFunctionParameters() {
+        const parameters= [];
     
         if (this.peekToken && this.peekToken.tokenType === TokenType.RPAREN) {
             this.advanceTokens();
@@ -340,11 +343,11 @@ class Parser {
         return parameters;
     }
     
-    private parseIdentifier(): Identifier | null {
+    parseIdentifier() {
         return this.currentToken ? new Identifier(this.currentToken, this.currentToken.literal) : null;
     }    
     
-    private parseIf(): If | null {
+    parseIf() {
         if (!this.currentToken) {
             return null;
         }
@@ -382,7 +385,7 @@ class Parser {
         return ifExpression;
     }
     
-    private parseInfixExpression(left: Expression): Infix {
+    parseInfixExpression(left) {
         if (!this.currentToken) {
             throw new Error('currentToken is null');
         }
@@ -398,7 +401,7 @@ class Parser {
         return infix;
     }
     
-    private parseInteger(): Integer | null {
+    parseInteger() {
         if (!this.currentToken) {
             return null;
         }
@@ -416,7 +419,7 @@ class Parser {
         return integer;
     }
     
-    private parseLetStatement(): LetStatement | null {
+    parseLetStatement() {
         if (!this.currentToken) {
             return null;
         }
@@ -444,7 +447,7 @@ class Parser {
         return letStatement;
     }
     
-    private parsePrefixExpression(): Prefix | null {
+     parsePrefixExpression(){
         if (!this.currentToken) {
             return null;
         }
@@ -458,7 +461,7 @@ class Parser {
         return prefixExpression;
     }
     
-    private parseReturnStatement(): ReturnStatement | null {
+     parseReturnStatement() {
         if (!this.currentToken) {
             return null;
         }
@@ -476,7 +479,7 @@ class Parser {
         return returnStatement;
     }
     
-    private parseStatement(): Statement | null {
+     parseStatement() {
         if (!this.currentToken) {
             return null;
         }
@@ -490,7 +493,7 @@ class Parser {
         }
     }
     
-    private peekPrecedence(): Precedence {
+     peekPrecedence(){
         if (!this.peekToken) {
             return Precedence.LOWEST;
         }
@@ -498,7 +501,7 @@ class Parser {
         return precedence !== undefined ? precedence : Precedence.LOWEST;
     }
     
-    private registerInfixFns(): InfixParseFns {
+     registerInfixFns() {
         return {
             [TokenType.PLUS]: this.parseInfixExpression.bind(this),
             [TokenType.MINUS]: this.parseInfixExpression.bind(this),
@@ -514,7 +517,7 @@ class Parser {
         };
     }
     
-    private registerPrefixFns(): PrefixParseFns {
+     registerPrefixFns() {
         return {
             [TokenType.FALSE]: this.parseBoolean.bind(this),
             [TokenType.FUNCTION]: this.parseFunction.bind(this),
@@ -529,7 +532,7 @@ class Parser {
         };
     }
 
-    private parseStringLiteral(): Expression {
+     parseStringLiteral() {
         if (!this.currentToken) {
             return null;
         }

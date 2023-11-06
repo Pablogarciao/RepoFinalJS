@@ -1,7 +1,7 @@
-import startRepl from "./lpp/repl";
+import startRepl from "./lpp/repl.mjs";
 
-function imprimirBienvenida(): void {
-    const bienvenida: string[] = [
+function imprimirBienvenida() {
+    const bienvenida= [
         "  ***     * *    ***    * *      *** ",
         " *   *   *   *  *   *  *   *    *   *",
         " *       *****  *      *****    *",
@@ -14,7 +14,7 @@ function imprimirBienvenida(): void {
     }
 }
 
-function main(): void {
+function main(){
     imprimirBienvenida();
     console.log("Presione enter para empezar")
     startRepl();

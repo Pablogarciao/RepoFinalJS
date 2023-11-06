@@ -1,5 +1,5 @@
-import { Token, TokenType } from '../lpp/tokens';
-import Lexer from '../lpp/lexer';
+import { Token, TokenType } from '../lpp/tokens.mjs';
+import Lexer from '../lpp/lexer.mjs';
 
 describe('Lexer', () => {
     test('one_character_operator', () => {
