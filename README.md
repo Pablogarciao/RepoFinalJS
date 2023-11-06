@@ -1,20 +1,11 @@
-# Interprete en TS
-Interprete desarrollado en TypeScript.
+# Compilador JS
 
 ## Integrantes
-* David Betancur
-* Tomas Lopera
-* Pedro Sierra
+* Nicolas Gutierrez
+* Nicolás Echeverri
+* Pablo García
 
-## Empezar
-*Descargar librerias:*
-
-    npm i
-
-*Ejecutar:*
-
-    npm run dev
-
-*Testear:*
-
-    npm run test
+##Para ejecutar:
+1. Descargar Node
+2. ejecutar en terminal node main.mjs
+3. 
